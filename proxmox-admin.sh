@@ -16,16 +16,16 @@
 # ---------------------------------------------------------------------------
 # INSTALLATION RAPIDE (copier-coller, en root sur le nœud)
 # ---------------------------------------------------------------------------
-# Remplacez <URL> par l'URL brute du script (GitHub « raw », Gist, ou serveur).
+# URL brute du script (dépôt public GitHub).
 #
 #   Menu interactif — recommandé (garde le clavier actif) :
-#     bash <(curl -fsSL <URL>)
+#     bash <(curl -fsSL https://raw.githubusercontent.com/hervef13300/cleanproxmox/main/proxmox-admin.sh)
 #
 #   Ou télécharger puis exécuter :
-#     curl -fsSL <URL> -o /tmp/proxmox-admin.sh && bash /tmp/proxmox-admin.sh
+#     curl -fsSL https://raw.githubusercontent.com/hervef13300/cleanproxmox/main/proxmox-admin.sh -o /tmp/proxmox-admin.sh && bash /tmp/proxmox-admin.sh
 #
 #   Simulation d'abord (aucune modification) :
-#     curl -fsSL <URL> -o /tmp/proxmox-admin.sh && bash /tmp/proxmox-admin.sh --dry-run
+#     curl -fsSL https://raw.githubusercontent.com/hervef13300/cleanproxmox/main/proxmox-admin.sh -o /tmp/proxmox-admin.sh && bash /tmp/proxmox-admin.sh --dry-run
 #
 # NB : « curl <URL> | bash » NE fonctionne PAS ici (le menu a besoin du
 #      clavier sur stdin) — utilisez bien l'une des formes ci-dessus.
