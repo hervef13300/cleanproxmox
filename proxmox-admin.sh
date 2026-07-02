@@ -41,6 +41,12 @@ MGMT_GW="172.16.0.1"       # Passerelle par défaut
 MGMT_BRIDGE="vmbr0"        # Nom du pont de gestion Proxmox
 
 # ===========================================================================
+# Installation du script sur le système
+# ===========================================================================
+SCRIPT_URL="https://raw.githubusercontent.com/hervef13300/cleanproxmox/main/proxmox-admin.sh"
+INSTALL_PATH="/usr/local/bin/proxmox-admin"   # chemin d'installation persistant
+
+# ===========================================================================
 # État global
 # ===========================================================================
 DRY_RUN=0                  # 1 = simulation : rien n'est réellement exécuté
@@ -348,6 +354,56 @@ EOF
 }
 
 # ===========================================================================
+# Installation / désinstallation du script lui-même
+# ===========================================================================
+action_installer_script() {
+    echo
+    echo "### Installation du script sur le système ###"
+    echo "Destination : $INSTALL_PATH"
+    if [[ -e "$INSTALL_PATH" ]]; then
+        echo "Un script est déjà présent — il sera mis à jour."
+    fi
+
+    # Récupère le contenu : copie depuis $0 si c'est un vrai fichier lisible,
+    # sinon (cas « bash <(curl ...) ») retéléchargement depuis SCRIPT_URL.
+    local src="${BASH_SOURCE[0]:-$0}"
+    if [[ -f "$src" && -r "$src" ]]; then
+        run install -m 0755 "$src" "$INSTALL_PATH"
+    elif have curl; then
+        if [[ $DRY_RUN -eq 1 ]]; then
+            echo "  [dry-run] curl -fsSL $SCRIPT_URL -o $INSTALL_PATH && chmod 0755 $INSTALL_PATH"
+        else
+            echo "  -> curl -fsSL $SCRIPT_URL -o $INSTALL_PATH"
+            if curl -fsSL "$SCRIPT_URL" -o "$INSTALL_PATH"; then
+                chmod 0755 "$INSTALL_PATH"
+            else
+                echo "  Échec du téléchargement depuis $SCRIPT_URL"
+                return
+            fi
+        fi
+    else
+        echo "  Impossible d'installer : source non lisible et 'curl' absent."
+        return
+    fi
+    echo "Installé. Relançable à tout moment avec :  proxmox-admin"
+    echo "(pour désinstaller le script : option 8 du menu)"
+}
+
+action_desinstaller_script() {
+    echo
+    echo "### Désinstallation du script du système ###"
+    if [[ ! -e "$INSTALL_PATH" ]]; then
+        echo "Aucun script installé à $INSTALL_PATH — rien à faire."
+        return
+    fi
+    if [[ $DRY_RUN -eq 0 ]]; then
+        confirm "Supprimer $INSTALL_PATH ?" "OUI" || { echo "Annulé."; return; }
+    fi
+    run rm -f "$INSTALL_PATH"
+    echo "Script désinstallé.$([[ $DRY_RUN -eq 1 ]] && echo ' (simulation)')"
+}
+
+# ===========================================================================
 # 6. Tout exécuter
 # ===========================================================================
 action_tout() {
@@ -378,6 +434,8 @@ while true; do
     echo "  4) Mettre à jour le système (apt full-upgrade)"
     echo "  5) Réinitialiser les cartes réseau (1ère = $MGMT_IP)"
     echo "  6) TOUT exécuter (2 -> 3 -> 4 -> 5)"
+    echo "  7) Installer ce script sur le système ($INSTALL_PATH)"
+    echo "  8) Désinstaller ce script du système"
     echo "  0) Quitter"
     echo "----------------------------------------------------------------"
     read -r -p "Votre choix : " choix
@@ -388,7 +446,16 @@ while true; do
         4) action_maj_systeme; pause ;;
         5) action_reset_reseau; pause ;;
         6) action_tout; pause ;;
-        0|q|Q) echo "Au revoir."; exit 0 ;;
+        7) action_installer_script; pause ;;
+        8) action_desinstaller_script; pause ;;
+        0|q|Q)
+            # Le script reste installé s'il l'a été (option 7). S'il a été
+            # lancé en volatile (bash <(curl ...)), on propose de l'installer.
+            if [[ ! -e "$INSTALL_PATH" ]]; then
+                read -r -p "Installer le script pour le garder ($INSTALL_PATH) ? [o/N] : " r
+                [[ "$r" =~ ^[oOyY]$ ]] && action_installer_script
+            fi
+            echo "Au revoir."; exit 0 ;;
         *) echo "Choix invalide." ;;
     esac
 done

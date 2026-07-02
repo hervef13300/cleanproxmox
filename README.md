@@ -18,7 +18,9 @@ Le script propose un menu avec les actions suivantes :
 | 4 | Mettre à jour le système | `apt update` + `full-upgrade` + `autoremove --purge` + `autoclean`. |
 | 5 | Réinitialiser les cartes réseau | Remet à zéro toutes les cartes physiques **sauf la première**, qui reste sur le pont `vmbr0` en **172.16.0.254/24**. |
 | 6 | TOUT exécuter | Enchaîne 2 → 3 → 4 → 5. |
-| 0 | Quitter | |
+| 7 | Installer le script | Copie le script dans `/usr/local/bin/proxmox-admin` pour le **garder** et le relancer avec `proxmox-admin`. |
+| 8 | Désinstaller le script | Supprime `/usr/local/bin/proxmox-admin`. |
+| 0 | Quitter | Si le script n'est pas installé (lancé via `curl`), propose de l'installer. |
 
 ---
 
@@ -50,6 +52,19 @@ chmod +x proxmox-admin.sh
 ```
 
 > ❌ **N'utilisez pas** `curl <URL> | bash` : le menu a besoin du clavier sur `stdin`, que le pipe remplace par le flux de `curl`. Utilisez `bash <(curl ...)` ou téléchargez d'abord le fichier.
+
+### Garder le script sur le nœud (installation)
+
+Lancé via `bash <(curl ...)`, le script est **volatile**. Pour le conserver :
+
+- **Option 7** du menu : copie le script dans `/usr/local/bin/proxmox-admin`. Il devient relançable simplement avec :
+
+  ```bash
+  proxmox-admin
+  ```
+
+- À la sortie (option 0), s'il n'est pas encore installé, le script **propose** de l'installer.
+- **Option 8** : le désinstalle (`rm /usr/local/bin/proxmox-admin`).
 
 ---
 
